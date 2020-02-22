@@ -14,16 +14,12 @@ import (
 )
 
 type Config struct {
-	host       string
-	port       string
-	logFile    string
-	dbHost     string
-	dbName     string
-	dbUser     string
-	dbPassword string
+	host    string
+	port    string
+	logFile string
 }
 
-var config Config
+var appConfig Config
 
 func SomeHttpHandler(w http.ResponseWriter, req *http.Request) {
 	url, _ := json.Marshal(req.URL)
@@ -38,30 +34,26 @@ func init() {
 		log.Print("No .env file found")
 	}
 
-	config = Config{
+	appConfig = Config{
 		tools.GetEnv("HOST", ""),
 		tools.GetEnv("PORT", "8080"),
 		tools.GetEnv("LOG_FILE", "app.log"),
-		tools.GetEnv("DB_HOST", ""),
-		tools.GetEnv("DB_NAME", ""),
-		tools.GetEnv("DB_USER", ""),
-		tools.GetEnv("DB_PASSWORD", ""),
 	}
-	//TODO: config errors
+	//TODO: AppConfig errors
 }
 
 func main() {
 
 	//TODO: always open
 	log.SetFlags(log.Ldate | log.Ltime)
-	f, err := os.OpenFile(config.logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(appConfig.logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
 	defer f.Close()
 	log.SetOutput(f)
 
-	lis, err := net.Listen("tcp", config.host+":"+config.port)
+	lis, err := net.Listen("tcp", appConfig.host+":"+appConfig.port)
 	if err != nil {
 		log.Fatalf("failed to listen %v", err)
 	}
@@ -75,7 +67,7 @@ func main() {
 	//mux.HandleFunc("/hello", SomeHttpHandler)
 	//
 	//server := &http.Server{
-	//	Addr:    ":" + config.port,
+	//	Addr:    ":" + AppConfig.port,
 	//	Handler: mux,
 	//}
 	//
