@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+
+service Dictionaries {
+    rpc GetDictionaries(DictionariesRequest) returns (DictionariesResponse) {}
+}
+
+message DictionariesRequest {}
+
+message Dictionary {
+    int32 id = 1;
+    string name = 2;
+}
+
+message DictionariesResponse {
+    repeated Dictionary complication_levels = 1;
+    repeated Dictionary fortress_levels = 2;
+    repeated Dictionary volumes = 3;
+}

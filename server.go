@@ -2,9 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/jannyjacky1/barmen/api/client"
+	"github.com/jannyjacky1/barmen/proto"
 	"github.com/jannyjacky1/barmen/tools"
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
 	"log"
+	"net"
 	"net/http"
 	"os"
 )
@@ -57,14 +61,23 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", SomeHttpHandler)
-	mux.HandleFunc("/hello", SomeHttpHandler)
-
-	server := &http.Server{
-		Addr:    ":" + config.port,
-		Handler: mux,
+	lis, err := net.Listen("tcp", config.host+":"+config.port)
+	if err != nil {
+		log.Fatalf("failed to listen %v", err)
 	}
 
-	log.Fatalln(server.ListenAndServe())
+	grpcServer := grpc.NewServer()
+	proto.RegisterDictionariesServer(grpcServer, &client.DictionariesServer{})
+	grpcServer.Serve(lis)
+
+	//mux := http.NewServeMux()
+	//mux.HandleFunc("/", SomeHttpHandler)
+	//mux.HandleFunc("/hello", SomeHttpHandler)
+	//
+	//server := &http.Server{
+	//	Addr:    ":" + config.port,
+	//	Handler: mux,
+	//}
+	//
+	//log.Fatalln(server.ListenAndServe())
 }
