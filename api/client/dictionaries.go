@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/jannyjacky1/barmen/db"
 	"github.com/jannyjacky1/barmen/proto"
 	"log"
 )
@@ -11,17 +12,17 @@ type DictionariesServer struct {
 
 func (s *DictionariesServer) GetDictionaries(ctx context.Context, request *proto.DictionariesRequest) (*proto.DictionariesResponse, error) {
 
-	complicationLevels, err := getComplicationLevels()
+	complicationLevels, err := getComplicationLevels(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fortressLevels, err := getFortressLevels()
+	fortressLevels, err := getFortressLevels(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	volumes, err := getVolumes()
+	volumes, err := getVolumes(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -30,31 +31,23 @@ func (s *DictionariesServer) GetDictionaries(ctx context.Context, request *proto
 	return &response, nil
 }
 
-func getComplicationLevels() ([]*proto.Dictionary, error) {
-	items := make([]*proto.Dictionary, 3)
-	items[0] = &proto.Dictionary{Id: 1, Name: "Легко"}
-	items[1] = &proto.Dictionary{Id: 2, Name: "Средне"}
-	items[2] = &proto.Dictionary{Id: 3, Name: "Сложно"}
+func getItemsFromTable(ctx context.Context, tableName string) ([]*proto.Dictionary, error) {
+	database := db.Database()
+	query := "SELECT id, name FROM " + tableName
+	var items []*proto.Dictionary
+	err := database.SelectContext(ctx, &items, query)
 
-	return items, nil
+	return items, err
 }
 
-func getFortressLevels() ([]*proto.Dictionary, error) {
-	items := make([]*proto.Dictionary, 4)
-	items[0] = &proto.Dictionary{Id: 1, Name: "Безалкогольный"}
-	items[1] = &proto.Dictionary{Id: 2, Name: "Легкий"}
-	items[2] = &proto.Dictionary{Id: 3, Name: "Средний"}
-	items[3] = &proto.Dictionary{Id: 4, Name: "Сложный"}
-
-	return items, nil
+func getComplicationLevels(ctx context.Context) ([]*proto.Dictionary, error) {
+	return getItemsFromTable(ctx, "tbl_complication_levels")
 }
 
-func getVolumes() ([]*proto.Dictionary, error) {
-	items := make([]*proto.Dictionary, 4)
-	items[0] = &proto.Dictionary{Id: 1, Name: "до 60 мл"}
-	items[1] = &proto.Dictionary{Id: 2, Name: "60-120 мл"}
-	items[2] = &proto.Dictionary{Id: 3, Name: "120-250 мл"}
-	items[3] = &proto.Dictionary{Id: 4, Name: "более 250 мл"}
+func getFortressLevels(ctx context.Context) ([]*proto.Dictionary, error) {
+	return getItemsFromTable(ctx, "tbl_fortress_levels")
+}
 
-	return items, nil
+func getVolumes(ctx context.Context) ([]*proto.Dictionary, error) {
+	return getItemsFromTable(ctx, "tbl_volumes")
 }
