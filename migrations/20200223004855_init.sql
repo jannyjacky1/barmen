@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS tbl_areas (
 CREATE TABLE IF NOT EXISTS tbl_cocktails (
   id SERIAL PRIMARY KEY,
   name varchar(60) not null unique,
+  name_en varchar(60),
   description text not null,
   complication_id integer REFERENCES tbl_complication_levels(id),
   fortress_id integer REFERENCES tbl_fortress_levels(id),
@@ -40,7 +41,11 @@ CREATE TABLE IF NOT EXISTS tbl_cocktails (
   volume_id integer REFERENCES tbl_volumes(id),
   recipe text not null,
   mark float,
-  preview_id integer REFERENCES tbl_files(id)
+  preview_id integer REFERENCES tbl_files(id),
+  is_fire boolean DEFAULT false,
+  is_flacky boolean DEFAULT false,
+  is_iba boolean DEFAULT false,
+  weight integer DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS tbl_ingredients (
@@ -66,7 +71,8 @@ CREATE TABLE IF NOT EXISTS tbl_cocktails_to_tbl_files (
 CREATE TABLE IF NOT EXISTS tbl_cocktails_to_tbl_ingredients (
   ingredient_id integer not null REFERENCES tbl_ingredients(id),
   cocktail_id integer not null REFERENCES tbl_cocktails(id),
-  volume integer not null,
+  volume integer,
+  unit varchar(10),
   PRIMARY KEY (ingredient_id, cocktail_id)
 );
 

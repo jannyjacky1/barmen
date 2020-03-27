@@ -17,3 +17,8 @@ goose postgres "database connection string" create new_miration sql
 ```
 
 You can use **BloomRPC** for checking gRPC API
+
+* Run protogen
+```
+protoc --go_out=plugins=grpc:. *.proto
+```
