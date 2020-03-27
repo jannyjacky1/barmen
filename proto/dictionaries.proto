@@ -17,4 +17,6 @@ message DictionariesResponse {
     repeated Dictionary complication_levels = 1;
     repeated Dictionary fortress_levels = 2;
     repeated Dictionary volumes = 3;
+    repeated Dictionary ingredients = 4;
+    repeated Dictionary other = 5;
 }
