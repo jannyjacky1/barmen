@@ -4,6 +4,7 @@ package proto;
 
 service Dictionaries {
     rpc GetDictionaries(DictionariesRequest) returns (DictionariesResponse) {}
+    rpc GetByName(NameRequest) returns (NameResponse) {}
 }
 
 message DictionariesRequest {}
@@ -19,4 +20,24 @@ message DictionariesResponse {
     repeated Dictionary volumes = 3;
     repeated Dictionary ingredients = 4;
     repeated Dictionary other = 5;
+}
+
+message NameRequest{
+    string name = 1;
+    int32 page = 2;
+}
+
+message NameItem {
+    enum Type {
+        COCKTAIL = 0;
+        INGREDIENT = 1;
+        INSTRUMENT = 2;
+    }
+    int32 id = 1;
+    string name = 2;
+    Type type = 3;
+}
+
+message NameResponse {
+    repeated NameItem items = 1;
 }

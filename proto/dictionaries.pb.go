@@ -24,6 +24,34 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type NameItem_Type int32
+
+const (
+	NameItem_COCKTAIL   NameItem_Type = 0
+	NameItem_INGREDIENT NameItem_Type = 1
+	NameItem_INSTRUMENT NameItem_Type = 2
+)
+
+var NameItem_Type_name = map[int32]string{
+	0: "COCKTAIL",
+	1: "INGREDIENT",
+	2: "INSTRUMENT",
+}
+
+var NameItem_Type_value = map[string]int32{
+	"COCKTAIL":   0,
+	"INGREDIENT": 1,
+	"INSTRUMENT": 2,
+}
+
+func (x NameItem_Type) String() string {
+	return proto.EnumName(NameItem_Type_name, int32(x))
+}
+
+func (NameItem_Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_b378073ffd87eff4, []int{4, 0}
+}
+
 type DictionariesRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -173,33 +201,187 @@ func (m *DictionariesResponse) GetOther() []*Dictionary {
 	return nil
 }
 
+type NameRequest struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Page                 int32    `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *NameRequest) Reset()         { *m = NameRequest{} }
+func (m *NameRequest) String() string { return proto.CompactTextString(m) }
+func (*NameRequest) ProtoMessage()    {}
+func (*NameRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b378073ffd87eff4, []int{3}
+}
+
+func (m *NameRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_NameRequest.Unmarshal(m, b)
+}
+func (m *NameRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_NameRequest.Marshal(b, m, deterministic)
+}
+func (m *NameRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NameRequest.Merge(m, src)
+}
+func (m *NameRequest) XXX_Size() int {
+	return xxx_messageInfo_NameRequest.Size(m)
+}
+func (m *NameRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_NameRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NameRequest proto.InternalMessageInfo
+
+func (m *NameRequest) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *NameRequest) GetPage() int32 {
+	if m != nil {
+		return m.Page
+	}
+	return 0
+}
+
+type NameItem struct {
+	Id                   int32         `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name                 string        `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Type                 NameItem_Type `protobuf:"varint,3,opt,name=type,proto3,enum=proto.NameItem_Type" json:"type,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *NameItem) Reset()         { *m = NameItem{} }
+func (m *NameItem) String() string { return proto.CompactTextString(m) }
+func (*NameItem) ProtoMessage()    {}
+func (*NameItem) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b378073ffd87eff4, []int{4}
+}
+
+func (m *NameItem) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_NameItem.Unmarshal(m, b)
+}
+func (m *NameItem) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_NameItem.Marshal(b, m, deterministic)
+}
+func (m *NameItem) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NameItem.Merge(m, src)
+}
+func (m *NameItem) XXX_Size() int {
+	return xxx_messageInfo_NameItem.Size(m)
+}
+func (m *NameItem) XXX_DiscardUnknown() {
+	xxx_messageInfo_NameItem.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NameItem proto.InternalMessageInfo
+
+func (m *NameItem) GetId() int32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *NameItem) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *NameItem) GetType() NameItem_Type {
+	if m != nil {
+		return m.Type
+	}
+	return NameItem_COCKTAIL
+}
+
+type NameResponse struct {
+	Items                []*NameItem `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
+}
+
+func (m *NameResponse) Reset()         { *m = NameResponse{} }
+func (m *NameResponse) String() string { return proto.CompactTextString(m) }
+func (*NameResponse) ProtoMessage()    {}
+func (*NameResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b378073ffd87eff4, []int{5}
+}
+
+func (m *NameResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_NameResponse.Unmarshal(m, b)
+}
+func (m *NameResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_NameResponse.Marshal(b, m, deterministic)
+}
+func (m *NameResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NameResponse.Merge(m, src)
+}
+func (m *NameResponse) XXX_Size() int {
+	return xxx_messageInfo_NameResponse.Size(m)
+}
+func (m *NameResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_NameResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NameResponse proto.InternalMessageInfo
+
+func (m *NameResponse) GetItems() []*NameItem {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 func init() {
+	proto.RegisterEnum("proto.NameItem_Type", NameItem_Type_name, NameItem_Type_value)
 	proto.RegisterType((*DictionariesRequest)(nil), "proto.DictionariesRequest")
 	proto.RegisterType((*Dictionary)(nil), "proto.Dictionary")
 	proto.RegisterType((*DictionariesResponse)(nil), "proto.DictionariesResponse")
+	proto.RegisterType((*NameRequest)(nil), "proto.NameRequest")
+	proto.RegisterType((*NameItem)(nil), "proto.NameItem")
+	proto.RegisterType((*NameResponse)(nil), "proto.NameResponse")
 }
 
 func init() { proto.RegisterFile("dictionaries.proto", fileDescriptor_b378073ffd87eff4) }
 
 var fileDescriptor_b378073ffd87eff4 = []byte{
-	// 258 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0x41, 0x4b, 0xc3, 0x30,
-	0x14, 0xc7, 0x6d, 0xb6, 0x2a, 0xbe, 0xc9, 0x86, 0x6f, 0x0a, 0x61, 0x5e, 0x4a, 0x2f, 0x16, 0x84,
-	0x21, 0xdb, 0xcd, 0xa3, 0x08, 0x5e, 0x76, 0xea, 0x59, 0x90, 0xda, 0x3e, 0x35, 0xd0, 0x26, 0x35,
-	0x2f, 0x1b, 0xf8, 0x71, 0xfc, 0xa6, 0x62, 0x6b, 0x5d, 0x2b, 0xcb, 0x29, 0xe1, 0xfd, 0x7f, 0xbf,
-	0x24, 0xfc, 0x03, 0x58, 0xa8, 0xdc, 0x29, 0xa3, 0x33, 0xab, 0x88, 0x97, 0xb5, 0x35, 0xce, 0x60,
-	0xd8, 0x2c, 0xf1, 0x25, 0xcc, 0x1f, 0x7a, 0x61, 0x4a, 0x1f, 0x5b, 0x62, 0x17, 0xdf, 0x02, 0xfc,
-	0x8d, 0x3f, 0x71, 0x0a, 0x42, 0x15, 0x32, 0x88, 0x82, 0x24, 0x4c, 0x85, 0x2a, 0x10, 0x61, 0xac,
-	0xb3, 0x8a, 0xa4, 0x88, 0x82, 0xe4, 0x34, 0x6d, 0xf6, 0xf1, 0x97, 0x80, 0x8b, 0xe1, 0x49, 0x5c,
-	0x1b, 0xcd, 0x84, 0xf7, 0x30, 0xcf, 0x4d, 0x55, 0x97, 0x2a, 0xcf, 0x7e, 0xc2, 0xe7, 0x92, 0x76,
-	0x54, 0xb2, 0x0c, 0xa2, 0x51, 0x32, 0x59, 0x9d, 0xb7, 0xaf, 0x59, 0xee, 0x2f, 0x4b, 0xb1, 0x4f,
-	0x6f, 0x1a, 0x18, 0xef, 0x60, 0xf6, 0x6a, 0xac, 0xb3, 0xc4, 0xdc, 0xf9, 0xc2, 0xe7, 0x4f, 0x3b,
-	0xf2, 0xd7, 0xbd, 0x81, 0x93, 0x9d, 0x29, 0xb7, 0x15, 0xb1, 0x1c, 0xf9, 0x9c, 0x8e, 0xc0, 0x35,
-	0x4c, 0x94, 0x7e, 0xb3, 0x54, 0x28, 0xd2, 0x8e, 0xe5, 0xd8, 0x27, 0xf4, 0x29, 0xbc, 0x86, 0xd0,
-	0xb8, 0x77, 0xb2, 0x32, 0xf4, 0xe1, 0x6d, 0xbe, 0x7a, 0x82, 0xb3, 0x7e, 0x45, 0xb8, 0x81, 0xd9,
-	0x23, 0xb9, 0xc1, 0x68, 0xf1, 0x5f, 0xde, 0x7f, 0xca, 0xe2, 0xea, 0x60, 0xd6, 0xd6, 0x1c, 0x1f,
-	0xbd, 0x1c, 0x37, 0xe9, 0xfa, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x53, 0x13, 0xc1, 0xee, 0x01,
-	0x00, 0x00,
+	// 406 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xdd, 0x8a, 0xd3, 0x40,
+	0x14, 0xde, 0x49, 0x13, 0xdd, 0x3d, 0x2d, 0xe9, 0x3a, 0x5d, 0x21, 0xac, 0x37, 0x61, 0x40, 0x0c,
+	0x08, 0x45, 0xba, 0xae, 0x17, 0xde, 0xb9, 0x3f, 0x94, 0x60, 0x8d, 0x30, 0xc6, 0x6b, 0x89, 0xcd,
+	0x71, 0x1d, 0x48, 0x32, 0x31, 0x33, 0x2d, 0xe4, 0x25, 0xbc, 0xf2, 0x05, 0x7c, 0x53, 0xc9, 0x5f,
+	0x9b, 0x16, 0x03, 0x7b, 0x95, 0x39, 0xdf, 0xcf, 0xcc, 0xc9, 0x77, 0x0e, 0xd0, 0x58, 0xac, 0xb5,
+	0x90, 0x59, 0x54, 0x08, 0x54, 0xf3, 0xbc, 0x90, 0x5a, 0x52, 0xab, 0xfe, 0xb0, 0xe7, 0x30, 0xbb,
+	0xeb, 0x91, 0x1c, 0x7f, 0x6d, 0x50, 0x69, 0xf6, 0x06, 0x60, 0x07, 0x97, 0xd4, 0x06, 0x43, 0xc4,
+	0x0e, 0x71, 0x89, 0x67, 0x71, 0x43, 0xc4, 0x94, 0x82, 0x99, 0x45, 0x29, 0x3a, 0x86, 0x4b, 0xbc,
+	0x33, 0x5e, 0x9f, 0xd9, 0x5f, 0x03, 0x2e, 0x0e, 0x6f, 0x52, 0xb9, 0xcc, 0x14, 0xd2, 0x1b, 0x98,
+	0xad, 0x65, 0x9a, 0x27, 0x62, 0x1d, 0x55, 0xe4, 0xb7, 0x04, 0xb7, 0x98, 0x28, 0x87, 0xb8, 0x23,
+	0x6f, 0xbc, 0x78, 0xd6, 0x74, 0x33, 0xdf, 0x3f, 0xc6, 0x69, 0x5f, 0xbd, 0xaa, 0xc5, 0xf4, 0x3d,
+	0x4c, 0x7f, 0xc8, 0x42, 0x17, 0xa8, 0x54, 0xe7, 0x37, 0x86, 0xfc, 0x76, 0xa7, 0x6c, 0xbd, 0xaf,
+	0xe1, 0xe9, 0x56, 0x26, 0x9b, 0x14, 0x95, 0x33, 0x1a, 0xf2, 0x74, 0x0a, 0x7a, 0x05, 0x63, 0x91,
+	0x3d, 0x14, 0x18, 0x0b, 0xcc, 0xb4, 0x72, 0xcc, 0x21, 0x43, 0x5f, 0x45, 0x5f, 0x81, 0x25, 0xf5,
+	0x4f, 0x2c, 0x1c, 0x6b, 0x48, 0xde, 0xf0, 0xec, 0x1a, 0xc6, 0x41, 0x94, 0x62, 0x1b, 0xf2, 0x2e,
+	0x46, 0xb2, 0x8f, 0xb1, 0xc2, 0xf2, 0xe8, 0xa1, 0x89, 0xd6, 0xe2, 0xf5, 0x99, 0xfd, 0x26, 0x70,
+	0x5a, 0xf9, 0x7c, 0x8d, 0xe9, 0x63, 0x66, 0x41, 0x3d, 0x30, 0x75, 0x99, 0xa3, 0x33, 0x72, 0x89,
+	0x67, 0x2f, 0x2e, 0xda, 0x7e, 0xba, 0x2b, 0xe6, 0x61, 0x99, 0x23, 0xaf, 0x15, 0xec, 0x2d, 0x98,
+	0x55, 0x45, 0x27, 0x70, 0x7a, 0xfb, 0xf9, 0xf6, 0x63, 0xf8, 0xc1, 0x5f, 0x9d, 0x9f, 0x50, 0x1b,
+	0xc0, 0x0f, 0x96, 0xfc, 0xfe, 0xce, 0xbf, 0x0f, 0xc2, 0x73, 0xd2, 0xd4, 0x5f, 0x42, 0xfe, 0xf5,
+	0x53, 0x55, 0x1b, 0xec, 0x1a, 0x26, 0xcd, 0x7f, 0xb4, 0x23, 0x7e, 0x09, 0x96, 0xd0, 0x98, 0x76,
+	0x43, 0x9d, 0x1e, 0x3d, 0xc8, 0x1b, 0x76, 0xf1, 0x87, 0xc0, 0xa4, 0xbf, 0x22, 0x74, 0x05, 0xd3,
+	0x25, 0xea, 0x03, 0xe8, 0xf2, 0x38, 0xbc, 0xfd, 0x52, 0x5e, 0xbe, 0xf8, 0x2f, 0xd7, 0xf4, 0xc0,
+	0x4e, 0xe8, 0x3b, 0x38, 0x5b, 0xa2, 0xbe, 0x29, 0x83, 0x3a, 0xc7, 0x5e, 0x0f, 0x9d, 0x7f, 0x76,
+	0x80, 0x75, 0xbe, 0xef, 0x4f, 0x6a, 0xf4, 0xea, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb5, 0xca,
+	0x2a, 0x6e, 0x26, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -215,6 +397,7 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DictionariesClient interface {
 	GetDictionaries(ctx context.Context, in *DictionariesRequest, opts ...grpc.CallOption) (*DictionariesResponse, error)
+	GetByName(ctx context.Context, in *NameRequest, opts ...grpc.CallOption) (*NameResponse, error)
 }
 
 type dictionariesClient struct {
@@ -234,9 +417,19 @@ func (c *dictionariesClient) GetDictionaries(ctx context.Context, in *Dictionari
 	return out, nil
 }
 
+func (c *dictionariesClient) GetByName(ctx context.Context, in *NameRequest, opts ...grpc.CallOption) (*NameResponse, error) {
+	out := new(NameResponse)
+	err := c.cc.Invoke(ctx, "/proto.Dictionaries/GetByName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DictionariesServer is the server API for Dictionaries service.
 type DictionariesServer interface {
 	GetDictionaries(context.Context, *DictionariesRequest) (*DictionariesResponse, error)
+	GetByName(context.Context, *NameRequest) (*NameResponse, error)
 }
 
 // UnimplementedDictionariesServer can be embedded to have forward compatible implementations.
@@ -245,6 +438,9 @@ type UnimplementedDictionariesServer struct {
 
 func (*UnimplementedDictionariesServer) GetDictionaries(ctx context.Context, req *DictionariesRequest) (*DictionariesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDictionaries not implemented")
+}
+func (*UnimplementedDictionariesServer) GetByName(ctx context.Context, req *NameRequest) (*NameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetByName not implemented")
 }
 
 func RegisterDictionariesServer(s *grpc.Server, srv DictionariesServer) {
@@ -269,6 +465,24 @@ func _Dictionaries_GetDictionaries_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Dictionaries_GetByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DictionariesServer).GetByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dictionaries/GetByName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DictionariesServer).GetByName(ctx, req.(*NameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Dictionaries_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Dictionaries",
 	HandlerType: (*DictionariesServer)(nil),
@@ -276,6 +490,10 @@ var _Dictionaries_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDictionaries",
 			Handler:    _Dictionaries_GetDictionaries_Handler,
+		},
+		{
+			MethodName: "GetByName",
+			Handler:    _Dictionaries_GetByName_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
