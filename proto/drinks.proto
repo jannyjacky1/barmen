@@ -36,10 +36,6 @@ message DrinkItem {
     string preview = 10;
 }
 
-message DrinksResponse {
-    repeated DrinkItem drinks = 1;
-}
-
 message Instrument {
     int32 id = 1;
     string name = 2;
@@ -50,6 +46,28 @@ message Ingredient {
     int32 id = 1;
     string name = 2;
     string volume = 3;
+}
+
+message DayDrink {
+    int32 id = 1;
+    bool is_flacky = 2;
+    bool is_fire = 3;
+    bool is_iba = 4;
+    float mark = 5;
+    string name = 6;
+    string complication = 8;
+    string fortress = 9;
+    string recipe = 10;
+    string description = 11;
+    string tried_by = 12;
+    string preview = 13;
+    repeated Ingredient ingredients = 14;
+    repeated Instrument instruments = 15;
+}
+
+message DrinksResponse {
+    repeated DrinkItem drinks = 1;
+    DayDrink day_drink = 2;
 }
 
 message DrinkResponse {

@@ -2,9 +2,13 @@ package client
 
 import (
 	"context"
+	"database/sql"
 	"github.com/jannyjacky1/barmen/proto"
 	"github.com/jannyjacky1/barmen/tools"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
+	"strings"
 )
 
 type DictionariesServer struct {
@@ -39,6 +43,20 @@ func (s *DictionariesServer) GetDictionaries(ctx context.Context, request *proto
 	}
 
 	response := proto.DictionariesResponse{ComplicationLevels: complicationLevels, FortressLevels: fortressLevels, Volumes: volumes, Ingredients: ingredients, Other: other}
+	return &response, nil
+}
+
+func (s *DictionariesServer) GetByName(ctx context.Context, request *proto.NameRequest) (*proto.NameResponse, error) {
+	var items []*proto.NameItem
+	perPage := 100
+	offset := perPage * int(request.Page)
+	query := "SELECT id, name, 0 AS type FROM tbl_cocktails WHERE LOWER(name) LIKE $1 UNION SELECT id, name, 1 AS type FROM tbl_ingredients WHERE LOWER(name) LIKE $1 UNION SELECT id, name, 2 AS type FROM tbl_instruments WHERE LOWER(name) LIKE $1 LIMIT $2 OFFSET $3"
+	err := s.App.Db.SelectContext(ctx, &items, query, "%"+strings.ToLower(request.Name)+"%", perPage, offset)
+	if err != nil && err != sql.ErrNoRows {
+		return &proto.NameResponse{}, status.Error(codes.Internal, err.Error())
+	}
+
+	response := proto.NameResponse{Items: items}
 	return &response, nil
 }
 
