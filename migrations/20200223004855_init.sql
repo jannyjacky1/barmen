@@ -24,12 +24,6 @@ CREATE TABLE IF NOT EXISTS tbl_volumes (
   volume_to integer not null
 );
 
-CREATE TABLE IF NOT EXISTS tbl_areas (
-  id SERIAL PRIMARY KEY,
-  name varchar(60) not null unique,
-  parent_id integer REFERENCES tbl_areas(id)
-);
-
 CREATE TABLE IF NOT EXISTS tbl_cocktails (
   id SERIAL PRIMARY KEY,
   name varchar(60) not null unique,
@@ -37,15 +31,16 @@ CREATE TABLE IF NOT EXISTS tbl_cocktails (
   description text not null,
   complication_id integer REFERENCES tbl_complication_levels(id),
   fortress_id integer REFERENCES tbl_fortress_levels(id),
-  area_id integer REFERENCES tbl_areas(id),
   volume_id integer REFERENCES tbl_volumes(id),
   recipe text not null,
-  mark float,
+  mark integer DEFAULT 0,
+  mark_cnt integer DEFAULT 0,
   preview_id integer REFERENCES tbl_files(id),
   is_fire boolean DEFAULT false,
   is_flacky boolean DEFAULT false,
   is_iba boolean DEFAULT false,
-  weight integer DEFAULT 0
+  weight integer DEFAULT 0,
+  icon varchar(60) DEFAULT 'highball'
 );
 
 CREATE TABLE IF NOT EXISTS tbl_ingredients (
@@ -60,12 +55,6 @@ CREATE TABLE IF NOT EXISTS tbl_instruments (
   name varchar(60) not null unique,
   description text,
   img_id integer REFERENCES tbl_files(id)
-);
-
-CREATE TABLE IF NOT EXISTS tbl_cocktails_to_tbl_files (
-  img_id integer not null REFERENCES tbl_files(id),
-  cocktail_id integer not null REFERENCES tbl_cocktails(id),
-  PRIMARY KEY (img_id, cocktail_id)
 );
 
 CREATE TABLE IF NOT EXISTS tbl_cocktails_to_tbl_ingredients (
@@ -108,6 +97,13 @@ CREATE TABLE IF NOT EXISTS tbl_admins (
   token_expire timestamp
 );
 
+CREATE TABLE IF NOT EXISTS tbl_settings (
+  id SERIAL PRIMARY KEY,
+  alias varchar not null unique,
+  name varchar not null,
+  value varchar not null
+);
+
 -- +goose Down
 DROP TABLE tbl_admins;
 DROP TABLE tbl_tries;
@@ -115,12 +111,11 @@ DROP TABLE tbl_favorites;
 DROP TABLE tbl_users;
 DROP TABLE tbl_cocktails_to_tbl_instruments;
 DROP TABLE tbl_cocktails_to_tbl_ingredients;
-DROP TABLE tbl_cocktails_to_tbl_files;
 DROP TABLE tbl_cocktails;
 DROP TABLE tbl_instruments;
 DROP TABLE tbl_ingredients;
-DROP TABLE tbl_areas;
 DROP TABLE tbl_volumes;
 DROP TABLE tbl_fortress_levels;
 DROP TABLE tbl_complication_levels;
 DROP TABLE tbl_files;
+DROP TABLE tbl_settings;

@@ -32,7 +32,9 @@ type CocktailSearchParams struct {
 
 func (s *DrinksServer) GetDrinks(ctx context.Context, request *proto.DrinksRequest) (*proto.DrinksResponse, error) {
 
-	dayCocktailId := 283
+	dayCocktailId := 0
+	err := s.App.Db.GetContext(ctx, &dayCocktailId, "SELECT CAST(value AS integer) FROM tbl_settings WHERE alias = 'day_cocktail'")
+
 	filterQuery, searchParams := prepareFilterParams(request)
 	response := proto.DrinksResponse{}
 
@@ -65,8 +67,8 @@ func getDrinks(ctx context.Context, s *DrinksServer, filterQuery string, searchP
 
 	var items []*proto.DrinkItem
 
-	query := "SELECT tbl_cocktails.id, tbl_cocktails.name, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, coalesce(tbl_files.filepath, '') AS preview, coalesce(string_agg(tbl_ingredients.name, ', '), '') AS ingredients FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.preview_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id"
-	queryEnd := " GROUP BY tbl_cocktails.id, tbl_cocktails.weight, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name, tbl_files.filepath ORDER BY weight DESC LIMIT :perpage OFFSET :offset"
+	query := "SELECT tbl_cocktails.id, tbl_cocktails.name, CONCAT(tbl_fortress_levels.name, ', ', tbl_complication_levels.name) AS properties, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, icon, coalesce(string_agg(tbl_ingredients.name, ', '), '') AS ingredients FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id"
+	queryEnd := " GROUP BY tbl_cocktails.id, tbl_cocktails.weight, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name ORDER BY weight DESC LIMIT :perpage OFFSET :offset"
 
 	query += filterQuery
 
@@ -91,9 +93,9 @@ func getDrink(ctx context.Context, s *DrinksServer, id int32, scenario string) (
 	var err error
 
 	if scenario == "day-drink" {
-		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, recipe, tbl_cocktails.description, coalesce(mark, 0) AS mark, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, coalesce(tbl_files.filepath, '') AS preview FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.preview_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
+		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, recipe, tbl_cocktails.description, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, coalesce(tbl_files.filepath, '') AS preview FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.preview_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
 	} else {
-		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, name_en AS nameEn, recipe, tbl_cocktails.description, coalesce(mark, 0) AS mark, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.preview_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
+		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, name_en AS nameEn, recipe, tbl_cocktails.description, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1), 1), ' (по ', mark_cnt, ' оценкам)') AS markDescription, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, icon FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
 
 	}
 

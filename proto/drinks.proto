@@ -30,10 +30,9 @@ message DrinkItem {
     bool is_iba = 4;
     float mark = 5;
     string name = 6;
-    string complication = 7;
-    string fortress = 8;
-    string ingredients = 9;
-    string preview = 10;
+    string properties = 7;
+    string ingredients = 8;
+    string icon = 9;
 }
 
 message Instrument {
@@ -83,8 +82,8 @@ message DrinkResponse {
     string recipe = 10;
     string description = 11;
     string tried_by = 12;
-    repeated string gallery = 13;
-    repeated Ingredient ingredients = 14;
+    string mark_description = 13;
+    string icon = 14;
     repeated Instrument instruments = 15;
-    repeated DrinkItem similar = 16;
+    repeated Ingredient ingredients = 16;
 }
