@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS tbl_cocktails (
 CREATE TABLE IF NOT EXISTS tbl_ingredients (
   id SERIAL PRIMARY KEY,
   name varchar(60) not null unique,
+  name_en varchar(60),
+  fortress int,
   description text,
   img_id integer REFERENCES tbl_files(id)
 );
@@ -53,6 +55,7 @@ CREATE TABLE IF NOT EXISTS tbl_ingredients (
 CREATE TABLE IF NOT EXISTS tbl_instruments (
   id SERIAL PRIMARY KEY,
   name varchar(60) not null unique,
+  name_en varchar(60),
   description text,
   img_id integer REFERENCES tbl_files(id)
 );

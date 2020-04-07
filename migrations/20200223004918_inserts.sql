@@ -1,12 +1,12 @@
 -- +goose Up
-INSERT INTO tbl_complication_levels(name, time) VALUES('Легко', '1 мин');
-INSERT INTO tbl_complication_levels(name, time) VALUES('Средне', '2-3 мин');
-INSERT INTO tbl_complication_levels(name, time) VALUES('Сложно', '5-10 мин');
+INSERT INTO tbl_complication_levels(name, time) VALUES('легкий', '2-3 мин');
+INSERT INTO tbl_complication_levels(name, time) VALUES('средний', '5 мин');
+INSERT INTO tbl_complication_levels(name, time) VALUES('сложный', '7-10 мин');
 
-INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('Безалкогольный', 0, 0);
-INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('Легкий', 1, 12);
-INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('Средний', 12, 25);
-INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('Крепкий', 25, 100);
+INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('безалкогольный', 0, 0);
+INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('слабоалкогольный', 1, 12);
+INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('средней крепости', 12, 25);
+INSERT INTO tbl_fortress_levels(name, fortress_from, fortress_to) VALUES('крепкий', 25, 100);
 
 INSERT INTO tbl_volumes(name, volume_from, volume_to) VALUES('до 60 мл', 0, 60);
 INSERT INTO tbl_volumes(name, volume_from, volume_to) VALUES('60-120 мл', 60, 120);

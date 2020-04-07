@@ -27,6 +27,8 @@ type CocktailSearchParams struct {
 	IsIba        bool
 	Includes     *pgtype.Int8Array
 	Except       *pgtype.Int8Array
+	Instruments  *pgtype.Int8Array
+	Similar      *pgtype.Int8Array
 	ExceptId     int32
 }
 
@@ -63,6 +65,62 @@ func (s *DrinksServer) GetDrinkById(ctx context.Context, request *proto.DrinkReq
 	return item, err
 }
 
+func (s *DrinksServer) SetDrinkTried(ctx context.Context, request *proto.DrinkTryRequest) (*proto.EmptyResponse, error) {
+	id := 0
+	err := s.App.Db.GetContext(ctx, &id, "SELECT id FROM tbl_users WHERE device_id = $1", request.UserId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			stmt, err := s.App.Db.PrepareNamed("INSERT INTO tbl_users (device_id) VALUES (:deviceid) RETURNING id")
+			if err != nil {
+				return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+			}
+			err = stmt.Get(&id, struct {
+				DeviceId string
+			}{DeviceId: request.UserId})
+			if err != nil {
+				return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+			}
+		} else {
+			return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	_, err = s.App.Db.Exec("INSERT INTO tbl_tries (user_id, cocktail_id) VALUES ($1, $2)", id, request.Id)
+
+	if err != nil {
+		return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+	}
+
+	return &proto.EmptyResponse{}, nil
+}
+
+func (s *DrinksServer) SetDrinkMark(ctx context.Context, request *proto.DrinkMarkRequest) (*proto.DrinkMarkResponse, error) {
+
+	var result proto.DrinkMarkResponse
+	var mark struct {
+		Mark    int
+		MarkCnt int
+	}
+	err := s.App.Db.GetContext(ctx, &mark, "SELECT mark, mark_cnt AS markCnt FROM tbl_cocktails WHERE id = $1", request.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &result, status.Error(codes.NotFound, err.Error())
+		}
+		return &result, status.Error(codes.Internal, err.Error())
+	}
+	_, err = s.App.Db.Exec("UPDATE tbl_cocktails SET mark = $1, mark_cnt = $2", mark.Mark+int(request.Mark), mark.MarkCnt+1)
+	if err != nil {
+		return &result, status.Error(codes.Internal, err.Error())
+	}
+
+	err = s.App.Db.GetContext(ctx, &result, "SELECT ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1), 1), ' (по ', mark_cnt, ' оценкам)') AS markDescription FROM tbl_cocktails WHERE id = $1", request.Id)
+	if err != nil {
+		return &result, status.Error(codes.Internal, err.Error())
+	}
+
+	return &result, nil
+}
+
 func getDrinks(ctx context.Context, s *DrinksServer, filterQuery string, searchParams CocktailSearchParams) ([]*proto.DrinkItem, error) {
 
 	var items []*proto.DrinkItem
@@ -93,9 +151,9 @@ func getDrink(ctx context.Context, s *DrinksServer, id int32, scenario string) (
 	var err error
 
 	if scenario == "day-drink" {
-		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, recipe, tbl_cocktails.description, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, coalesce(tbl_files.filepath, '') AS preview FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.preview_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
+		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, recipe, tbl_cocktails.description, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, coalesce(tbl_files.filepath, '') AS preview, CONCAT(COUNT(DISTINCT tbl_tries.user_id), ' человек') AS triedBy FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.preview_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id LEFT JOIN tbl_tries ON tbl_tries.cocktail_id = tbl_cocktails.id WHERE tbl_cocktails.id = $1 GROUP BY tbl_cocktails.id, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name, tbl_files.filepath"
 	} else {
-		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, name_en AS nameEn, recipe, tbl_cocktails.description, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1), 1), ' (по ', mark_cnt, ' оценкам)') AS markDescription, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, icon FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
+		query = "SELECT tbl_cocktails.id, tbl_cocktails.name, tbl_cocktails.name_en AS nameEn, recipe, tbl_cocktails.description, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, CONCAT(ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1), 1), ' (по ', mark_cnt, ' оценкам)') AS markDescription, CONCAT(tbl_complication_levels.name, ' (', tbl_complication_levels.time, ')') AS complication, tbl_fortress_levels.name AS fortress, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, icon FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id WHERE tbl_cocktails.id = $1"
 
 	}
 
@@ -171,6 +229,16 @@ func prepareFilterParams(request *proto.DrinksRequest) (string, CocktailSearchPa
 		queryWhere = append(queryWhere, "NOT(:except && ARRAY(SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci WHERE ci.cocktail_id = tbl_cocktails.id))")
 		searchParams.Except = &pgtype.Int8Array{}
 		searchParams.Except.Set(request.Except)
+	}
+	if len(request.Instruments) > 0 {
+		queryWhere = append(queryWhere, ":instruments <@ ARRAY(SELECT ci.instrument_id FROM tbl_cocktails_to_tbl_instruments AS ci WHERE ci.cocktail_id = tbl_cocktails.id)")
+		searchParams.Instruments = &pgtype.Int8Array{}
+		searchParams.Instruments.Set(request.Instruments)
+	}
+	if len(request.Similar) > 0 {
+		queryWhere = append(queryWhere, "ARRAY(SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci WHERE ci.cocktail_id = tbl_cocktails.id) && ARRAY(SELECT ci2.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci2 WHERE ci2.cocktail_id = ANY(:similar))")
+		searchParams.Similar = &pgtype.Int8Array{}
+		searchParams.Similar.Set(request.Similar)
 	}
 
 	if len(queryWhere) > 0 {
