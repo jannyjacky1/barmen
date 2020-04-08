@@ -63,3 +63,24 @@ func GetApp() App {
 	db := GetDb(config)
 	return App{config, db}
 }
+
+func GetWord(cnt int, one string, two string, many string) string {
+	switch cnt % 10 {
+	case 1:
+		if cnt%100 == 11 {
+			return many
+		}
+		return one
+	case 2:
+	case 3:
+	case 4:
+		if cnt%100 > 11 && cnt%100 < 15 {
+			return many
+		}
+		return two
+	default:
+		return many
+	}
+
+	return ""
+}

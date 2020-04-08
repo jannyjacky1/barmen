@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/jackc/pgtype"
-	"github.com/jannyjacky1/barmen/proto"
+	"github.com/jannyjacky1/barmen/protogen"
 	"github.com/jannyjacky1/barmen/tools"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,13 +32,13 @@ type CocktailSearchParams struct {
 	ExceptId     int32
 }
 
-func (s *DrinksServer) GetDrinks(ctx context.Context, request *proto.DrinksRequest) (*proto.DrinksResponse, error) {
+func (s *DrinksServer) GetDrinks(ctx context.Context, request *protogen.DrinksRequest) (*protogen.DrinksResponse, error) {
 
 	dayCocktailId := 0
 	err := s.App.Db.GetContext(ctx, &dayCocktailId, "SELECT CAST(value AS integer) FROM tbl_settings WHERE alias = 'day_cocktail'")
 
 	filterQuery, searchParams := prepareFilterParams(request)
-	response := proto.DrinksResponse{}
+	response := protogen.DrinksResponse{}
 
 	if filterQuery == "" && dayCocktailId > 0 {
 		dayDrink, _, err := getDrink(ctx, s, int32(dayCocktailId), "day-drink")
@@ -51,52 +51,52 @@ func (s *DrinksServer) GetDrinks(ctx context.Context, request *proto.DrinksReque
 
 	drinks, err := getDrinks(ctx, s, filterQuery, searchParams)
 	if err != nil {
-		return &proto.DrinksResponse{}, err
+		return &protogen.DrinksResponse{}, err
 	}
 
 	response.Drinks = drinks
 	return &response, nil
 }
 
-func (s *DrinksServer) GetDrinkById(ctx context.Context, request *proto.DrinkRequest) (*proto.DrinkResponse, error) {
+func (s *DrinksServer) GetDrinkById(ctx context.Context, request *protogen.DrinkRequest) (*protogen.DrinkResponse, error) {
 
 	_, item, err := getDrink(ctx, s, request.Id, "cocktail-by-id")
 
 	return item, err
 }
 
-func (s *DrinksServer) SetDrinkTried(ctx context.Context, request *proto.DrinkTryRequest) (*proto.EmptyResponse, error) {
+func (s *DrinksServer) SetDrinkTried(ctx context.Context, request *protogen.DrinkTryRequest) (*protogen.EmptyResponse, error) {
 	id := 0
 	err := s.App.Db.GetContext(ctx, &id, "SELECT id FROM tbl_users WHERE device_id = $1", request.UserId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			stmt, err := s.App.Db.PrepareNamed("INSERT INTO tbl_users (device_id) VALUES (:deviceid) RETURNING id")
 			if err != nil {
-				return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+				return &protogen.EmptyResponse{}, status.Error(codes.Internal, err.Error())
 			}
 			err = stmt.Get(&id, struct {
 				DeviceId string
 			}{DeviceId: request.UserId})
 			if err != nil {
-				return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+				return &protogen.EmptyResponse{}, status.Error(codes.Internal, err.Error())
 			}
 		} else {
-			return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+			return &protogen.EmptyResponse{}, status.Error(codes.Internal, err.Error())
 		}
 	}
 
 	_, err = s.App.Db.Exec("INSERT INTO tbl_tries (user_id, cocktail_id) VALUES ($1, $2)", id, request.Id)
 
 	if err != nil {
-		return &proto.EmptyResponse{}, status.Error(codes.Internal, err.Error())
+		return &protogen.EmptyResponse{}, status.Error(codes.Internal, err.Error())
 	}
 
-	return &proto.EmptyResponse{}, nil
+	return &protogen.EmptyResponse{}, nil
 }
 
-func (s *DrinksServer) SetDrinkMark(ctx context.Context, request *proto.DrinkMarkRequest) (*proto.DrinkMarkResponse, error) {
+func (s *DrinksServer) SetDrinkMark(ctx context.Context, request *protogen.DrinkMarkRequest) (*protogen.DrinkMarkResponse, error) {
 
-	var result proto.DrinkMarkResponse
+	var result protogen.DrinkMarkResponse
 	var mark struct {
 		Mark    int
 		MarkCnt int
@@ -121,9 +121,9 @@ func (s *DrinksServer) SetDrinkMark(ctx context.Context, request *proto.DrinkMar
 	return &result, nil
 }
 
-func getDrinks(ctx context.Context, s *DrinksServer, filterQuery string, searchParams CocktailSearchParams) ([]*proto.DrinkItem, error) {
+func getDrinks(ctx context.Context, s *DrinksServer, filterQuery string, searchParams CocktailSearchParams) ([]*protogen.DrinkItem, error) {
 
-	var items []*proto.DrinkItem
+	var items []*protogen.DrinkItem
 
 	query := "SELECT tbl_cocktails.id, tbl_cocktails.name, CONCAT(tbl_fortress_levels.name, ', ', tbl_complication_levels.name) AS properties, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, icon, coalesce(string_agg(tbl_ingredients.name, ', '), '') AS ingredients FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id"
 	queryEnd := " GROUP BY tbl_cocktails.id, tbl_cocktails.weight, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name ORDER BY weight DESC LIMIT :perpage OFFSET :offset"
@@ -143,10 +143,10 @@ func getDrinks(ctx context.Context, s *DrinksServer, filterQuery string, searchP
 	return items, err
 }
 
-func getDrink(ctx context.Context, s *DrinksServer, id int32, scenario string) (*proto.DayDrink, *proto.DrinkResponse, error) {
+func getDrink(ctx context.Context, s *DrinksServer, id int32, scenario string) (*protogen.DayDrink, *protogen.DrinkResponse, error) {
 
-	var dayDrink proto.DayDrink
-	var item proto.DrinkResponse
+	var dayDrink protogen.DayDrink
+	var item protogen.DrinkResponse
 	var query string
 	var err error
 
@@ -168,7 +168,7 @@ func getDrink(ctx context.Context, s *DrinksServer, id int32, scenario string) (
 		if err == sql.ErrNoRows {
 			code = codes.NotFound
 		}
-		return &proto.DayDrink{}, &proto.DrinkResponse{}, status.Error(code, err.Error())
+		return &protogen.DayDrink{}, &protogen.DrinkResponse{}, status.Error(code, err.Error())
 	}
 
 	query = "SELECT ingredient_id AS id, name, CONCAT(volume, ' ', unit) AS volume FROM tbl_cocktails_to_tbl_ingredients INNER JOIN tbl_ingredients ON tbl_ingredients.id = tbl_cocktails_to_tbl_ingredients.ingredient_id WHERE cocktail_id = $1"
@@ -188,7 +188,7 @@ func getDrink(ctx context.Context, s *DrinksServer, id int32, scenario string) (
 	return &dayDrink, &item, nil
 }
 
-func prepareFilterParams(request *proto.DrinksRequest) (string, CocktailSearchParams) {
+func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearchParams) {
 	var queryWhere []string
 
 	searchParams := CocktailSearchParams{}

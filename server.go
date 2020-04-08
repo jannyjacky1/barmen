@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/jannyjacky1/barmen/api/client"
-	"github.com/jannyjacky1/barmen/proto"
+	"github.com/jannyjacky1/barmen/protogen"
 	"github.com/jannyjacky1/barmen/tools"
 	"google.golang.org/grpc"
 	"log"
@@ -33,7 +33,9 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	proto.RegisterDictionariesServer(grpcServer, &client.DictionariesServer{app})
-	proto.RegisterDrinksServer(grpcServer, &client.DrinksServer{app})
+	protogen.RegisterDictionariesServer(grpcServer, &client.DictionariesServer{app})
+	protogen.RegisterDrinksServer(grpcServer, &client.DrinksServer{app})
+	protogen.RegisterIngredientsServer(grpcServer, &client.IngredientsServer{app})
+	protogen.RegisterInstrumentsServer(grpcServer, &client.InstrumentsServer{app})
 	grpcServer.Serve(lis)
 }
