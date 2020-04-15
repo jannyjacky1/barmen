@@ -20,6 +20,7 @@ func GetEnv(key string, defaultVal string) string {
 type Config struct {
 	Host       string
 	Port       string
+	MediaUrl   string
 	isDev      string
 	logFile    string
 	dbHost     string
@@ -44,6 +45,7 @@ func GetConfig() Config {
 	return Config{
 		GetEnv("HOST", ""),
 		GetEnv("PORT", "8080"),
+		GetEnv("MEDIA_URL", ""),
 		GetEnv("IS_DEV", "1"),
 		GetEnv("LOG_FILE", "app.log"),
 		GetEnv("DB_HOST", ""),

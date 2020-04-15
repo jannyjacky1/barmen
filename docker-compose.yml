@@ -23,6 +23,16 @@ services:
     networks:
       - barmen
     container_name: barmen_db
+  media:
+    image: httpd:2.4
+    restart: always
+    ports:
+      - 8081:80
+    volumes:
+      - ./uploads:/usr/local/apache2/htdocs/
+    networks:
+      - barmen
+    container_name: barmen_media
 
 networks:
   barmen:

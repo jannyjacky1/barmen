@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS tbl_cocktails (
   is_flacky boolean DEFAULT false,
   is_iba boolean DEFAULT false,
   weight integer DEFAULT 0,
-  icon varchar(60) DEFAULT 'highball'
+  icon_id integer REFERENCES tbl_files(id)
 );
 
 CREATE TABLE IF NOT EXISTS tbl_ingredients (
