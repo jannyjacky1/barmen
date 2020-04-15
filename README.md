@@ -22,3 +22,7 @@ You can use **BloomRPC** for checking gRPC API
 ```
 protoc --go_out=plugins=grpc:. *.proto
 ```
+
+``
+golangci-lint run
+``

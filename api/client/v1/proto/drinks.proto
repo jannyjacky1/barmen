@@ -2,10 +2,13 @@ syntax = "proto3";
 
 package proto;
 
+option go_package = ".;proto";
+
 service Drinks {
     rpc GetDrinks(DrinksRequest) returns (DrinksResponse) {}
+    rpc GetDrinkOfDay(Empty) returns (DrinkOfDayResponse) {}
     rpc GetDrinkById(DrinkRequest) returns (DrinkResponse) {}
-    rpc SetDrinkTried(DrinkTryRequest) returns (EmptyResponse) {}
+    rpc SetDrinkTried(DrinkTryRequest) returns (Empty) {}
     rpc SetDrinkMark(DrinkMarkRequest) returns (DrinkMarkResponse) {}
 }
 
@@ -23,7 +26,7 @@ message DrinkMarkRequest {
     int32 mark = 2;
 }
 
-message EmptyResponse {}
+message Empty {}
 
 message DrinkMarkResponse {
     int32 mark = 1;
@@ -68,7 +71,7 @@ message Ingredient {
     string volume = 3;
 }
 
-message DayDrink {
+message DrinkOfDayResponse {
     int32 id = 1;
     bool is_flacky = 2;
     bool is_fire = 3;
@@ -87,7 +90,6 @@ message DayDrink {
 
 message DrinksResponse {
     repeated DrinkItem drinks = 1;
-    DayDrink day_drink = 2;
 }
 
 message DrinkResponse {

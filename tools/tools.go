@@ -4,6 +4,7 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 	"log"
 	"os"
 )
@@ -19,7 +20,8 @@ func GetEnv(key string, defaultVal string) string {
 type Config struct {
 	Host       string
 	Port       string
-	LogFile    string
+	isDev      string
+	logFile    string
 	dbHost     string
 	dbName     string
 	dbUser     string
@@ -29,6 +31,7 @@ type Config struct {
 type App struct {
 	Config Config
 	Db     *sqlx.DB
+	Log    *zap.Logger
 }
 
 func GetConfig() Config {
@@ -41,6 +44,7 @@ func GetConfig() Config {
 	return Config{
 		GetEnv("HOST", ""),
 		GetEnv("PORT", "8080"),
+		GetEnv("IS_DEV", "1"),
 		GetEnv("LOG_FILE", "app.log"),
 		GetEnv("DB_HOST", ""),
 		GetEnv("DB_NAME", ""),
@@ -58,10 +62,29 @@ func GetDb(config Config) *sqlx.DB {
 	return db
 }
 
+func GetLogger(config Config) *zap.Logger {
+	var cfg zap.Config
+	if config.isDev == "0" {
+		cfg = zap.NewDevelopmentConfig()
+	} else {
+		cfg = zap.NewProductionConfig()
+	}
+	cfg.OutputPaths = []string{
+		config.logFile,
+	}
+	logger, err := cfg.Build()
+	if err != nil {
+		return logger
+	}
+	defer logger.Sync()
+	return logger
+}
+
 func GetApp() App {
 	config := GetConfig()
 	db := GetDb(config)
-	return App{config, db}
+	logger := GetLogger(config)
+	return App{Config: config, Db: db, Log: logger}
 }
 
 func GetWord(cnt int, one string, two string, many string) string {

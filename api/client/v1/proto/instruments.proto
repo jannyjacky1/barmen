@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package proto;
 
+option go_package = ".;proto";
+
 service Instruments {
     rpc GetInstrumentById(InstrumentRequest) returns (InstrumentResponse) {}
 }

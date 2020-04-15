@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/jannyjacky1/barmen/api/client"
-	"github.com/jannyjacky1/barmen/protogen"
+	"github.com/jannyjacky1/barmen/api/client/v1"
+	"github.com/jannyjacky1/barmen/api/client/v1/protogen"
 	"github.com/jannyjacky1/barmen/tools"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 	"os"
+	"os/signal"
 )
 
 var app tools.App
@@ -18,24 +18,28 @@ func init() {
 
 func main() {
 
-	//TODO: always open
-	log.SetFlags(log.Ldate | log.Ltime)
-	f, err := os.OpenFile(app.Config.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer f.Close()
-	log.SetOutput(f)
-
 	lis, err := net.Listen("tcp", app.Config.Host+":"+app.Config.Port)
 	if err != nil {
-		log.Fatalf("failed to listen %v", err)
+		app.Log.Panic("failed to listen " + err.Error())
 	}
 
 	grpcServer := grpc.NewServer()
-	protogen.RegisterDictionariesServer(grpcServer, &client.DictionariesServer{app})
-	protogen.RegisterDrinksServer(grpcServer, &client.DrinksServer{app})
-	protogen.RegisterIngredientsServer(grpcServer, &client.IngredientsServer{app})
-	protogen.RegisterInstrumentsServer(grpcServer, &client.InstrumentsServer{app})
-	grpcServer.Serve(lis)
+	protogen.RegisterDictionariesServer(grpcServer, &v1.DictionariesServer{App: app})
+	protogen.RegisterDrinksServer(grpcServer, &v1.DrinksServer{App: app})
+	protogen.RegisterIngredientsServer(grpcServer, &v1.IngredientsServer{App: app})
+	protogen.RegisterInstrumentsServer(grpcServer, &v1.InstrumentsServer{App: app})
+
+	go func() {
+		app.Log.Info("start grpc server port: " + app.Config.Port)
+		err = grpcServer.Serve(lis)
+		if err != nil {
+			app.Log.Panic(err.Error())
+		}
+	}()
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	app.Log.Info("stopping grpc server...")
+	grpcServer.GracefulStop()
 }

@@ -1,9 +1,9 @@
-package client
+package v1
 
 import (
 	"context"
 	"database/sql"
-	"github.com/jannyjacky1/barmen/protogen"
+	"github.com/jannyjacky1/barmen/api/client/v1/protogen"
 	"github.com/jannyjacky1/barmen/tools"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,11 +24,16 @@ func (s *IngredientsServer) GetIngredientById(ctx context.Context, request *prot
 		code := codes.Internal
 		if err == sql.ErrNoRows {
 			code = codes.NotFound
+		} else {
+			s.App.Log.Error(err.Error())
 		}
 		return &ingredient, status.Error(code, err.Error())
 	}
 
-	cnt, _ := strconv.Atoi(ingredient.Info)
+	cnt, err := strconv.Atoi(ingredient.Info)
+	if err != nil {
+		s.App.Log.Error(err.Error())
+	}
 	ingredient.Info = "Используется в " + ingredient.Info + " " + tools.GetWord(cnt, "коктейле", "коктейлях", "коктейлях")
 
 	return &ingredient, nil

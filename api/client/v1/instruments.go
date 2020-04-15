@@ -1,9 +1,9 @@
-package client
+package v1
 
 import (
 	"context"
 	"database/sql"
-	"github.com/jannyjacky1/barmen/protogen"
+	"github.com/jannyjacky1/barmen/api/client/v1/protogen"
 	"github.com/jannyjacky1/barmen/tools"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,11 +24,16 @@ func (s *InstrumentsServer) GetInstrumentById(ctx context.Context, request *prot
 		code := codes.Internal
 		if err == sql.ErrNoRows {
 			code = codes.NotFound
+		} else {
+			s.App.Log.Error(err.Error())
 		}
 		return &instrument, status.Error(code, err.Error())
 	}
 
-	cnt, _ := strconv.Atoi(instrument.Info)
+	cnt, err := strconv.Atoi(instrument.Info)
+	if err != nil {
+		s.App.Log.Error(err.Error())
+	}
 	instrument.Info = "Используется для " + instrument.Info + " " + tools.GetWord(cnt, "коктейля", "коктейлей", "коктейлей")
 
 	return &instrument, nil
