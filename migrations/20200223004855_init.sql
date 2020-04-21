@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS tbl_ingredients (
   name_en varchar(60),
   fortress int,
   description text,
-  img_id integer REFERENCES tbl_files(id)
+  img_id integer REFERENCES tbl_files(id),
+  required boolean DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS tbl_instruments (
