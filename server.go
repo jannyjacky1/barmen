@@ -20,7 +20,7 @@ func init() {
 func main() {
 
 	c := cron.New()
-	c.AddFunc("1 * * * *", func() {
+	c.AddFunc("10 * * * *", func() {
 		tools.SetCocktailOfDay(app)
 	})
 	c.Start()
