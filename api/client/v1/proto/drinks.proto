@@ -38,9 +38,9 @@ message DrinkMarkResponse {
 
 message DrinksRequest {
   int32 page = 1;
-  int32 fortress = 2;
-  int32 complication = 3;
-  int32 volume = 4;
+  repeated int32 fortress = 2;
+  repeated int32 complication = 3;
+  repeated int32 volume = 4;
   bool is_flacky = 5;
   bool is_fire = 6;
   bool is_iba = 7;

@@ -19,9 +19,9 @@ type DrinksServer struct {
 type CocktailSearchParams struct {
 	Offset       int32
 	PerPage      int32
-	Fortress     int32
-	Complication int32
-	Volume       int32
+	Fortress     *pgtype.Int8Array
+	Complication *pgtype.Int8Array
+	Volume       *pgtype.Int8Array
 	IsFlacky     bool
 	IsFire       bool
 	IsIba        bool
@@ -150,9 +150,8 @@ func getDrinks(ctx context.Context, s *DrinksServer, filterQuery string, searchP
 
 	var items []*protogen.DrinkItem
 	query := "SELECT tbl_cocktails.id, tbl_cocktails.name, CONCAT(tbl_fortress_levels.name, ', ', tbl_complication_levels.name) AS properties, ROUND(CAST(mark AS decimal)/GREATEST(mark_cnt,1)) AS mark, is_flacky AS isFlacky, is_fire AS isFire, is_iba AS isIba, CONCAT('" + s.App.Config.MediaUrl + "', coalesce(tbl_files.filepath, '')) AS icon, coalesce(string_agg(tbl_ingredients.name, ', '), '') AS ingredients FROM tbl_cocktails INNER JOIN tbl_complication_levels ON tbl_complication_levels.id = tbl_cocktails.complication_id INNER JOIN tbl_fortress_levels ON tbl_fortress_levels.id = tbl_cocktails.fortress_id LEFT JOIN tbl_cocktails_to_tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.cocktail_id = tbl_cocktails.id LEFT JOIN tbl_ingredients ON tbl_cocktails_to_tbl_ingredients.ingredient_id = tbl_ingredients.id LEFT JOIN tbl_files ON tbl_files.id = tbl_cocktails.icon_id"
-	queryEnd := " GROUP BY tbl_cocktails.id, tbl_cocktails.weight, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name, tbl_files.filepath ORDER BY weight DESC, tbl_cocktails.id ASC LIMIT :perpage OFFSET :offset"
 
-	filterQuery, args, err := s.App.Db.BindNamed(filterQuery+queryEnd, searchParams)
+	filterQuery, args, err := s.App.Db.BindNamed(filterQuery, searchParams)
 	query = query + filterQuery
 
 	if err != nil {
@@ -223,22 +222,38 @@ func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearc
 	var queryWhere []string
 	var errors []error
 
+	resultQuery := ""
+	querySimilar := "(SELECT COUNT(*) FROM (SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci INNER JOIN tbl_ingredients AS ti ON ti.id = ci.ingredient_id WHERE required = true AND ci.cocktail_id = tbl_cocktails.id INTERSECT SELECT ci2.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci2 WHERE ci2.cocktail_id = ANY(:similar)) AS tmp) DESC, "
+	queryGroupBy := " GROUP BY tbl_cocktails.id, tbl_cocktails.weight, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name, tbl_files.filepath"
+
 	searchParams := CocktailSearchParams{}
 
 	searchParams.PerPage = 50
 	searchParams.Offset = request.Page * searchParams.PerPage
 
-	if request.Fortress > 0 {
-		queryWhere = append(queryWhere, "tbl_cocktails.fortress_id = :fortress")
-		searchParams.Fortress = request.Fortress
+	if len(request.Fortress) > 0 {
+		queryWhere = append(queryWhere, "tbl_cocktails.fortress_id = ANY(:fortress)")
+		searchParams.Fortress = &pgtype.Int8Array{}
+		err := searchParams.Fortress.Set(request.Fortress)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
-	if request.Complication > 0 {
-		queryWhere = append(queryWhere, "tbl_cocktails.complication_id = :complication")
-		searchParams.Complication = request.Complication
+	if len(request.Complication) > 0 {
+		queryWhere = append(queryWhere, "tbl_cocktails.complication_id = ANY(:complication)")
+		searchParams.Complication = &pgtype.Int8Array{}
+		err := searchParams.Complication.Set(request.Complication)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
-	if request.Volume > 0 {
-		queryWhere = append(queryWhere, "tbl_cocktails.volume_id = :volume")
-		searchParams.Volume = request.Volume
+	if len(request.Volume) > 0 {
+		queryWhere = append(queryWhere, "tbl_cocktails.volume_id = ANY(:volume)")
+		searchParams.Volume = &pgtype.Int8Array{}
+		err := searchParams.Volume.Set(request.Volume)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 	if request.IsFlacky {
 		queryWhere = append(queryWhere, "tbl_cocktails.is_flacky = :isflacky")
@@ -277,7 +292,8 @@ func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearc
 		}
 	}
 	if len(request.Similar) > 0 {
-		queryWhere = append(queryWhere, "ARRAY(SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci WHERE ci.cocktail_id = tbl_cocktails.id) && ARRAY(SELECT ci2.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci2 WHERE ci2.cocktail_id = ANY(:similar))")
+		queryWhere = append(queryWhere, "ARRAY(SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci INNER JOIN tbl_ingredients AS ti ON ti.id = ci.ingredient_id WHERE required = true AND ci.cocktail_id = tbl_cocktails.id) && ARRAY(SELECT ci2.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci2 WHERE ci2.cocktail_id = ANY(:similar))")
+		queryWhere = append(queryWhere, "NOT(tbl_cocktails.id = ANY(:similar))")
 		searchParams.Similar = &pgtype.Int8Array{}
 		err := searchParams.Similar.Set(request.Similar)
 		if err != nil {
@@ -286,8 +302,16 @@ func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearc
 	}
 
 	if len(queryWhere) > 0 {
-		return " WHERE " + strings.Join(queryWhere, " AND "), searchParams, errors
+		resultQuery += " WHERE " + strings.Join(queryWhere, " AND ")
 	}
 
-	return "", searchParams, errors
+	resultQuery += queryGroupBy
+
+	if len(request.Similar) > 0 {
+		resultQuery += " ORDER BY " + querySimilar + "weight DESC, tbl_cocktails.id ASC LIMIT :perpage OFFSET :offset"
+	} else {
+		resultQuery += " ORDER BY weight DESC, tbl_cocktails.id ASC LIMIT :perpage OFFSET :offset"
+	}
+
+	return resultQuery, searchParams, errors
 }

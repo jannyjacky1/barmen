@@ -60,8 +60,8 @@ func (s *DictionariesServer) GetByName(ctx context.Context, request *protogen.Na
 	return &response, nil
 }
 
-func getItemsFromTable(ctx context.Context, s *DictionariesServer, tableName string) ([]*protogen.Dictionary, error) {
-	query := "SELECT id, name FROM " + tableName
+func getItemsFromTable(ctx context.Context, s *DictionariesServer, tableName string, sortColumn string) ([]*protogen.Dictionary, error) {
+	query := "SELECT id, name FROM " + tableName + " ORDER BY " + sortColumn + " ASC"
 	var items []*protogen.Dictionary
 	err := s.App.Db.SelectContext(ctx, &items, query)
 
@@ -69,25 +69,25 @@ func getItemsFromTable(ctx context.Context, s *DictionariesServer, tableName str
 }
 
 func getComplicationLevels(ctx context.Context, s *DictionariesServer) ([]*protogen.Dictionary, error) {
-	return getItemsFromTable(ctx, s, "tbl_complication_levels")
+	return getItemsFromTable(ctx, s, "tbl_complication_levels", "id")
 }
 
 func getFortressLevels(ctx context.Context, s *DictionariesServer) ([]*protogen.Dictionary, error) {
-	return getItemsFromTable(ctx, s, "tbl_fortress_levels")
+	return getItemsFromTable(ctx, s, "tbl_fortress_levels", "id")
 }
 
 func getVolumes(ctx context.Context, s *DictionariesServer) ([]*protogen.Dictionary, error) {
-	return getItemsFromTable(ctx, s, "tbl_volumes")
+	return getItemsFromTable(ctx, s, "tbl_volumes", "id")
 }
 
 func getIngredients(ctx context.Context, s *DictionariesServer) ([]*protogen.Dictionary, error) {
-	return getItemsFromTable(ctx, s, "tbl_ingredients")
+	return getItemsFromTable(ctx, s, "tbl_ingredients", "name")
 }
 
 func getOther(ctx context.Context, s *DictionariesServer) ([]*protogen.Dictionary, error) {
 	return []*protogen.Dictionary{
 		&protogen.Dictionary{Id: 1, Name: "Слоеный"},
 		&protogen.Dictionary{Id: 2, Name: "Горящий"},
-		&protogen.Dictionary{Id: 1, Name: "Коктейль IBA"},
+		&protogen.Dictionary{Id: 3, Name: "Коктейль IBA"},
 	}, nil
 }

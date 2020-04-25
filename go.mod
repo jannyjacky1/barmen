@@ -13,6 +13,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pressly/goose v2.6.0+incompatible // indirect
+	github.com/robfig/cron v1.2.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7

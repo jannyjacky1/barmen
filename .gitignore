@@ -17,3 +17,4 @@
 .env
 server
 *.log
+migrations/data

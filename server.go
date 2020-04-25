@@ -4,6 +4,7 @@ import (
 	"github.com/jannyjacky1/barmen/api/client/v1"
 	"github.com/jannyjacky1/barmen/api/client/v1/protogen"
 	"github.com/jannyjacky1/barmen/tools"
+	"github.com/robfig/cron"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -17,6 +18,12 @@ func init() {
 }
 
 func main() {
+
+	c := cron.New()
+	c.AddFunc("1 * * * *", func() {
+		tools.SetCocktailOfDay(app)
+	})
+	c.Start()
 
 	lis, err := net.Listen("tcp", app.Config.Host+":"+app.Config.Port)
 	if err != nil {
@@ -42,4 +49,5 @@ func main() {
 	<-quit
 	app.Log.Info("stopping grpc server...")
 	grpcServer.GracefulStop()
+	c.Stop()
 }

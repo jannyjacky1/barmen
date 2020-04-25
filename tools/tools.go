@@ -109,3 +109,19 @@ func GetWord(cnt int, one string, two string, many string) string {
 
 	return ""
 }
+
+func SetCocktailOfDay(app App) {
+	dayCocktailId := ""
+	err := app.Db.Get(&dayCocktailId, "SELECT CAST(id AS VARCHAR) FROM tbl_cocktails ORDER BY floor(random() * 5000 + 1)::int DESC LIMIT 1")
+	if err != nil {
+		app.Log.Error(err.Error())
+		return
+	}
+
+	_, err = app.Db.Exec("UPDATE tbl_settings SET value = $1 WHERE alias = 'day_cocktail'", dayCocktailId)
+	if err != nil {
+		app.Log.Error(err.Error())
+		return
+	}
+	app.Log.Info("SET DAY COCKTAIL " + dayCocktailId)
+}

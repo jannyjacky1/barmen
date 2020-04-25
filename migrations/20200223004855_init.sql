@@ -69,11 +69,17 @@ CREATE TABLE IF NOT EXISTS tbl_cocktails_to_tbl_ingredients (
   PRIMARY KEY (ingredient_id, cocktail_id)
 );
 
+CREATE INDEX tbl_cocktails_to_tbl_ingredients_ingredient_id  ON tbl_cocktails_to_tbl_ingredients(ingredient_id);
+CREATE INDEX tbl_cocktails_to_tbl_ingredients_cocktail_id  ON tbl_cocktails_to_tbl_ingredients(cocktail_id);
+
 CREATE TABLE IF NOT EXISTS tbl_cocktails_to_tbl_instruments (
   instrument_id integer not null REFERENCES tbl_instruments(id),
   cocktail_id integer not null REFERENCES tbl_cocktails(id),
   PRIMARY KEY (instrument_id, cocktail_id)
 );
+
+CREATE INDEX tbl_cocktails_to_tbl_instruments_instrument_id  ON tbl_cocktails_to_tbl_instruments(instrument_id);
+CREATE INDEX tbl_cocktails_to_tbl_instruments_cocktail_id  ON tbl_cocktails_to_tbl_instruments(cocktail_id);
 
 CREATE TABLE IF NOT EXISTS tbl_users (
   id SERIAL PRIMARY KEY,
