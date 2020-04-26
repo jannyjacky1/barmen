@@ -224,6 +224,7 @@ func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearc
 
 	resultQuery := ""
 	querySimilar := "(SELECT COUNT(*) FROM (SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci INNER JOIN tbl_ingredients AS ti ON ti.id = ci.ingredient_id WHERE required = true AND ci.cocktail_id = tbl_cocktails.id INTERSECT SELECT ci2.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci2 WHERE ci2.cocktail_id = ANY(:similar)) AS tmp) DESC, "
+	queryIncludes := "(SELECT COUNT(*) FROM (SELECT ci2.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci2 WHERE ci2.ingredient_id = ANY(:includes) INTERSECT SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci WHERE ci.cocktail_id = tbl_cocktails.id) AS tmp) DESC, "
 	queryGroupBy := " GROUP BY tbl_cocktails.id, tbl_cocktails.weight, tbl_complication_levels.name, tbl_complication_levels.time, tbl_fortress_levels.name, tbl_files.filepath"
 
 	searchParams := CocktailSearchParams{}
@@ -268,7 +269,7 @@ func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearc
 		searchParams.IsIba = true
 	}
 	if len(request.Includes) > 0 {
-		queryWhere = append(queryWhere, ":includes <@ ARRAY(SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci WHERE ci.cocktail_id = tbl_cocktails.id)")
+		queryWhere = append(queryWhere, ":includes && ARRAY(SELECT ci.ingredient_id FROM tbl_cocktails_to_tbl_ingredients AS ci WHERE ci.cocktail_id = tbl_cocktails.id)")
 		searchParams.Includes = &pgtype.Int8Array{}
 		err := searchParams.Includes.Set(request.Includes)
 		if err != nil {
@@ -305,13 +306,15 @@ func prepareFilterParams(request *protogen.DrinksRequest) (string, CocktailSearc
 		resultQuery += " WHERE " + strings.Join(queryWhere, " AND ")
 	}
 
-	resultQuery += queryGroupBy
+	resultQuery += queryGroupBy + " ORDER BY "
 
 	if len(request.Similar) > 0 {
-		resultQuery += " ORDER BY " + querySimilar + "weight DESC, tbl_cocktails.id ASC LIMIT :perpage OFFSET :offset"
-	} else {
-		resultQuery += " ORDER BY weight DESC, tbl_cocktails.id ASC LIMIT :perpage OFFSET :offset"
+		resultQuery += querySimilar
 	}
+	if len(request.Includes) > 0 {
+		resultQuery += queryIncludes
+	}
+	resultQuery += "weight DESC, tbl_cocktails.id ASC LIMIT :perpage OFFSET :offset"
 
 	return resultQuery, searchParams, errors
 }
