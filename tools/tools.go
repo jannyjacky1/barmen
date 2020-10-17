@@ -18,15 +18,16 @@ func GetEnv(key string, defaultVal string) string {
 }
 
 type Config struct {
-	Host       string
-	Port       string
-	MediaUrl   string
-	isDev      string
-	logFile    string
-	dbHost     string
-	dbName     string
-	dbUser     string
-	dbPassword string
+	Host        string
+	Port        string
+	ManagerPort string
+	MediaUrl    string
+	IsDev       string
+	logFile     string
+	dbHost      string
+	dbName      string
+	dbUser      string
+	dbPassword  string
 }
 
 type App struct {
@@ -45,6 +46,7 @@ func GetConfig() Config {
 	return Config{
 		GetEnv("HOST", ""),
 		GetEnv("PORT", "8080"),
+		GetEnv("MANAGER_PORT", "8082"),
 		GetEnv("MEDIA_URL", ""),
 		GetEnv("IS_DEV", "1"),
 		GetEnv("LOG_FILE", "app.log"),
@@ -66,7 +68,7 @@ func GetDb(config Config) *sqlx.DB {
 
 func GetLogger(config Config) *zap.Logger {
 	var cfg zap.Config
-	if config.isDev == "0" {
+	if config.IsDev == "0" {
 		cfg = zap.NewDevelopmentConfig()
 	} else {
 		cfg = zap.NewProductionConfig()
